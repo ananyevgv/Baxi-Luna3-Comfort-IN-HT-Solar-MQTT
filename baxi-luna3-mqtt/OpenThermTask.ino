@@ -50,15 +50,15 @@ public:
         break;
     case OpenThermMessageID::Tboiler:
         // Получили температуру котла
-        vars.heat_temp.value = ot.getTemperature(response);
+        vars.heat_temp.value = ot.getDHWTemperature();
         break;
     case OpenThermMessageID::Tdhw:
         // Получили температуру ГВС
-        vars.dhw_temp.value = ot.getTemperature(response);
+        vars.dhw_temp.value = ot.getDHWTemperature();
         break;
     case OpenThermMessageID::Toutside:
         // Получили внешнюю температуру
-        vars.outside_temp.value = ot.getTemperature(response);
+        vars.outside_temp.value = ot.getDHWTemperature();
         break;
     case OpenThermMessageID::ASFflags:
         flags = (response & 0xFFFF) >> 8;
