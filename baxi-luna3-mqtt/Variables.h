@@ -12,6 +12,9 @@
 #ifndef MQTT_CLEAN_SESSION
 #define MQTT_CLEAN_SESSION 1 // 0 = No clean session, 1 = Clean session (default)
 #endif
+#ifndef MS2H
+#define MS2H 3600000 // Miliseconds to hours
+#endif
 
 #define INIT_VAR 4
 #define MODE_VAR 6
@@ -20,7 +23,8 @@
 #define HOUSE_TEMP_COMP BOILER_TEMP_SET + sizeof(float)
 #define OTC_COMP HOUSE_TEMP_COMP + sizeof(bool)
 #define HEATER_ENABLE OTC_COMP + sizeof(bool)
-#define CURVE_K HEATER_ENABLE + sizeof(bool)
+#define HW_ENABLE HEATER_ENABLE + sizeof(bool)
+#define CURVE_K HW_ENABLE + sizeof(bool)
 #define MONITOR CURVE_K + sizeof(float)
 #define POLL_INTERVAL MONITOR + sizeof(bool)
 #define POST_REC POLL_INTERVAL  + sizeof(long)
@@ -58,6 +62,8 @@ static struct MAIN_VARIABLES
   VARIABLE<float> dhw_temp;
   VARIABLE<unsigned int> fault_code;
   VARIABLE<float> outside_temp;
+  VARIABLE<float> rel_mod;
+  VARIABLE<float> kwh_consumed = VARIABLE<float>(0.0);;
   VARIABLE<float> dhw_temp_set = VARIABLE<float>(50.0); // Температура воды по умолчанию
   VARIABLE<float> control_set = VARIABLE<float>(0.0);
   VARIABLE<bool> isHeatingEnabled;
@@ -92,7 +98,7 @@ static struct MAIN_VARIABLES
   VARIABLE<int> MaxCHsetpLow;
   VARIABLE<bool> dump_request = VARIABLE<bool>(false);
   VARIABLE<String> mqttTopicPrefix = VARIABLE<String>(String("opentherm"));
-  VARIABLE<long> MQTT_polling_interval = VARIABLE<long>(30000);
+  VARIABLE<unsigned long> MQTT_polling_interval = VARIABLE<unsigned long>(30000);
 
 private:
   EEPROM_Rotate eprom;
@@ -115,6 +121,7 @@ public:
     eprom.put(HOUSE_TEMP_COMP, house_temp_compsenation.value);
     eprom.put(OTC_COMP, enableOutsideTemperatureCompensation.value);
     eprom.put(HEATER_ENABLE, enableCentralHeating.value);
+    eprom.put(HW_ENABLE, enableHotWater.value);
     eprom.put(CURVE_K, iv_k.value);
     eprom.put(MONITOR, monitor_only.value);
     eprom.put(POLL_INTERVAL, MQTT_polling_interval.value);
@@ -125,6 +132,7 @@ public:
     Serial.println("Уставка ГВС = " + String(dhw_temp_set.value));
     Serial.println("Компенсация внешней Температуры = " + String(enableOutsideTemperatureCompensation.value));
     Serial.println("Отопление = " + String(enableCentralHeating.value));
+    Serial.println("ГВС = " + String(enableHotWater.value));
     Serial.println("Наклон кривой = " + String(iv_k.value));
     Serial.println("Мониторинг = " + String(monitor_only.value));
     Serial.println("Цикл обновления MQTT = " + String(MQTT_polling_interval.value));
@@ -145,6 +153,7 @@ public:
     house_temp_compsenation.value = eprom.get(HOUSE_TEMP_COMP,house_temp_compsenation.value);
     enableOutsideTemperatureCompensation.value = eprom.get(OTC_COMP,enableOutsideTemperatureCompensation.value);
     enableCentralHeating.value = eprom.get(HEATER_ENABLE,enableCentralHeating.value);
+    enableHotWater.value = eprom.get(HW_ENABLE,enableHotWater.value);
     iv_k.value = eprom.get(CURVE_K,iv_k.value);
     monitor_only.value = eprom.get(MONITOR,monitor_only.value);
     MQTT_polling_interval.value = eprom.get(POLL_INTERVAL,MQTT_polling_interval.value);
@@ -155,6 +164,7 @@ public:
     Serial.println("Уставка ГВС = " + String(dhw_temp_set.value));
     Serial.println("Компенсация внешней Температуры = " + String(enableOutsideTemperatureCompensation.value));
     Serial.println("Отопление = " + String(enableCentralHeating.value));
+    Serial.println("ГВС = " + String(enableHotWater.value));
     Serial.println("Наклон кривой = " + String(iv_k.value));
     Serial.println("Мониторинг = " + String(monitor_only.value));
     Serial.println("Цикл обновления MQTT = " + String(MQTT_polling_interval.value));

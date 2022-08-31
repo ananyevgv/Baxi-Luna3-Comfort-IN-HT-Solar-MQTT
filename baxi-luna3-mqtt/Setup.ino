@@ -74,6 +74,9 @@ void setup_wifi()
   }
   //Конец чтения конфигурации
 
+  // Set WiFi hostname  
+  WiFi.hostname(host);
+
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
@@ -111,8 +114,8 @@ void setup_wifi()
   Serial.println("WiFi connected...");
 
   //read updated parameters
-  strcpy(mqtt_server, custom_mqtt_server.getValue());
   strcpy(host, custom_hostname.getValue());
+  strcpy(mqtt_server, custom_mqtt_server.getValue());  
   strcpy(mqtt_port, custom_mqtt_port.getValue());
   strcpy(mqtt_user, custom_mqtt_user.getValue());
   strcpy(mqtt_password, custom_mqtt_password.getValue());
@@ -123,8 +126,8 @@ void setup_wifi()
     Serial.println("saving config");
     DynamicJsonDocument json(1024);
 
-    json["mqtt_server"] = mqtt_server;
     json["hostname"] = host;
+    json["mqtt_server"] = mqtt_server;    
     json["mqtt_port"] = mqtt_port;
     json["mqtt_user"] = mqtt_user;
     json["mqtt_password"] = mqtt_password;

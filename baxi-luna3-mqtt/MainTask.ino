@@ -56,6 +56,11 @@ protected:
         vars.enableCentralHeating.value = json["heater_enable"] | false;
         needWrite = true;
       }
+      if (json.containsKey("hw_enable"))
+      {
+        vars.enableHotWater.value = json["hw_enable"] | false;
+        needWrite = true;
+      }
       if (json.containsKey("curve_ratio"))
       {
         vars.iv_k.value = json["curve_ratio"] | 1.5f;
@@ -123,14 +128,14 @@ protected:
 
       Serial.print("Соединяемся с  MQTT сервером ...");
       // Attempt to connect
-      if (client.connect("opentherm", mqtt_user, mqtt_password))
+      if (client.connect(host, mqtt_user, mqtt_password))
       {
         Serial.println("ok");
         // после подключения публикуем объявление...
         // ... и перезаписываем
         lastReconnectAttempt = 0;
         client.subscribe((vars.mqttTopicPrefix.value + "/cmnd").c_str());
-        //      client.subscribe("spdhw");
+        // client.subscribe("spdhw");
       }
       else
       {
@@ -177,6 +182,7 @@ protected:
     json["heater_temp_set"] = vars.heat_temp_set.value;
     json["control_set"] = String(vars.control_set.value,1);
     json["heater_enable"] = vars.enableCentralHeating.value;
+    json["hw_enable"] = vars.enableHotWater.value;
     json["dhw_temp_set"] = vars.dhw_temp_set.value;
     json["heater_temp"] = vars.heat_temp.value;
     json["dhw_temp"] = vars.dhw_temp.value;
@@ -185,6 +191,8 @@ protected:
     json["recirculation"] = vars.post_recirculation.value;
     json["outside_temp_comp"] = vars.enableOutsideTemperatureCompensation.value;
     json["outside_temp"] = vars.outside_temp.value;
+    json["rel_mod"] = vars.rel_mod.value;
+    json["kwh_consumed"] = vars.kwh_consumed.value;
     json["fault"] = vars.isFault.value;
     json["fault_code"] = vars.fault_code.value;
     json["flame"] = vars.isFlameOn.value;
@@ -268,6 +276,7 @@ protected:
     reply += String("\nТемпература ГВС = ") + vars.dhw_temp.value;
     reply += String("\nТемпература на улице = ") + vars.outside_temp.value;
     reply += String("\nТемпература в доме = ") + vars.house_temp.value;
+    reply += String("\nМодуляция горелки = ") + vars.rel_mod.value;
     reply += String("\nУстановка котла = ") + vars.heat_temp_set.value;
     reply += String("\nУстановка ГВС = ") + vars.dhw_temp_set.value;
     reply += String("\nУстановка Котла при регуляторах = ") + vars.control_set.value;
@@ -296,7 +305,9 @@ protected:
     reply += String("\nОшибка по газу/огню  = ") + (vars.gas_fault.value ? String("да") : String("нет"));
     reply += String("\nОшибка по тяге воздуха  = ") + (vars.air_fault.value ? String("да") : String("нет"));
     reply += String("\nПерегрев теплоносителя = ") + (vars.water_overtemp.value ? String("да") : String("нет"));
-
+    reply += String("\n ----------- Потребление ---------------");
+    reply += String("\nПотребление с запуска системы = ") + vars.kwh_consumed.value + String(" kWh");
+    
     httpServer.sendHeader("Content-Type", "text/plain; charset=utf-8");
     httpServer.send(200, "text/plain", reply);
   }

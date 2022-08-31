@@ -19,7 +19,7 @@ private:
       dt = 0;      // время между измерениями
 
 public:
-  void static ICACHE_RAM_ATTR handleInterrupt()
+  void static IRAM_ATTR handleInterrupt()
   {
     ot.handleInterrupt();
   }
@@ -49,17 +49,21 @@ public:
         vars.isDiagnostic.value = ot.isDiagnostic(response);
         break;
     case OpenThermMessageID::Tboiler:
-        // Получили температуру котла
-        vars.heat_temp.value = ot.getDHWTemperature();
+        // Получили температуру котла        
+        vars.heat_temp.value = ot.isValidResponse(response) ? ot.getFloat(response) : 0;         
         break;
     case OpenThermMessageID::Tdhw:
-        // Получили температуру ГВС
-        vars.dhw_temp.value = ot.getDHWTemperature();
+        // Получили температуру ГВС        
+        vars.dhw_temp.value = ot.isValidResponse(response) ? ot.getFloat(response) : 0;
         break;
     case OpenThermMessageID::Toutside:
-        // Получили внешнюю температуру
-        vars.outside_temp.value = ot.getDHWTemperature();
+        // Получили внешнюю температуру        
+        vars.outside_temp.value = ot.isValidResponse(response) ? ot.getFloat(response) : 0;
         break;
+    case OpenThermMessageID::RelModLevel:
+        // Получили уровень модуляции горелки        
+        vars.rel_mod.value = ot.isValidResponse(response) ? ot.getFloat(response) : 0;
+        break;        
     case OpenThermMessageID::ASFflags:
         flags = (response & 0xFFFF) >> 8;
         vars.service_required.value = flags & 0x01;
@@ -129,16 +133,16 @@ protected:
   //===============================================================
   float pid(float sp, float pv, float pv_last, float &ierr, float dt)
   {
-    float Kc = 5.0;   // K / %Heater
-    float tauI = 50.0; // sec
+    float Kc = 1.0;   // K / %Heater
+    float tauI = 100.0; // sec
     float tauD = 1.0;  // sec
     // ПИД коэффициенты
     float KP = Kc;
     float KI = Kc / tauI;
     float KD = Kc * tauD;
     // верхняя и нижняя границы уровня нагрева
-    float ophi =  100;
-    float oplo = 0;
+    float ophi =  45;
+    float oplo = 30;
     // вычислить ошибку
     float error = sp - pv;
     // calculate the integral error
@@ -235,6 +239,13 @@ protected:
     return sendRequest(request,response);
   }
 
+  bool getModulation()
+  {
+    unsigned long response;
+    unsigned long request = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::RelModLevel, 0);
+    return sendRequest(request,response);
+  }
+
   bool sendRequest(unsigned long request, unsigned long& response)
   {
     send_newts = millis();
@@ -258,7 +269,7 @@ protected:
     response = ot_response;
     return true; // Response is global variable
   }
-
+  
   // Main blocks here
   void setup()
   {
@@ -471,7 +482,8 @@ protected:
     if (new_ts - ts > 1000)
     {
       unsigned long localResponse;
-      unsigned long localRequest = ot.buildSetBoilerStatusRequest(vars.enableCentralHeating.value & recirculation, vars.enableHotWater.value, vars.enableCooling.value, vars.enableOutsideTemperatureCompensation.value, vars.enableCentralHeating2.value);
+      unsigned long localRequest = ot.buildSetBoilerStatusRequest(vars.enableCentralHeating.value & recirculation, \
+        vars.enableHotWater.value, vars.enableCooling.value, vars.enableOutsideTemperatureCompensation.value, vars.enableCentralHeating2.value);
       sendRequest(localRequest,localResponse);
 
       dt = (new_ts - ts) / 1000;
@@ -511,10 +523,11 @@ protected:
       DEBUG.println("Тип и версия котла: тип " + String(vars.SlaveType.value) + ", версия " + String(vars.SlaveVersion.value));
       
       // Команды чтения данных котла
-      getOutsideTemp();
+      // getOutsideTemp(); Not supported
       getBoilerTemp();
       getDHWTemp();
       getFaultCode();
+      getModulation();
 
       // Команды уставки
       setDHWTemp(vars.dhw_temp_set.value); // Записываем заданную температуру ГВС
@@ -571,20 +584,23 @@ protected:
           recirculation = true; // No control over recirculation
         }
       }
+      
+      //Рассчитываем потребление энергии
+      vars.kwh_consumed.value = vars.kwh_consumed.value + vars.rel_mod.value * BOILER_RATING * dt / MS2H;
+      
       // Верхняя и нижняя границы для регулировки установки TdhwSet-UB / TdhwSet-LB  (t°C)
       if(loop_counter <= 0) {
-      localRequest = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::TdhwSetUBTdhwSetLB, 0);
-      sendRequest(localRequest, localResponse);
-      
-
-      // Верхняя и нижняя границы для регулировки MaxTSet-UB / MaxTSet-LB (t°C)
-      localRequest = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSetUBMaxTSetLB, 0);
-      sendRequest(localRequest, localResponse);
-
-      loop_counter = 20;
+        localRequest = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::TdhwSetUBTdhwSetLB, 0);
+        sendRequest(localRequest, localResponse);
+        
+  
+        // Верхняя и нижняя границы для регулировки MaxTSet-UB / MaxTSet-LB (t°C)
+        localRequest = ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::MaxTSetUBMaxTSetLB, 0);
+        sendRequest(localRequest, localResponse);
+  
+        loop_counter = 20;
       }
       loop_counter--;
     }
   }
-
 } OtHandler;

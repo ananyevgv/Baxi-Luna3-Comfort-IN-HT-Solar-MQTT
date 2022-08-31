@@ -10,7 +10,6 @@
 #include <WiFiUdp.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
-
 #include <OpenTherm.h>
 #include <ArduinoJson.h>
 
@@ -19,6 +18,7 @@ const int inPin = 4;  //D2
 const int outPin = 5; //D1
 
 #define BUILTIN_LED 2     // D4 Встроенный LED
+#define BOILER_RATING 24 // Boiler max power in kW
 
 bool debug = false;
 //flag for saving data
@@ -27,12 +27,10 @@ bool shouldSaveConfig = false;
 #define DEBUG  \
     if (debug) \
     Serial
-
 #define INFO Serial
-
 #define WARN Serial
 
-char host[80] = "opentherm";
+char host[80] = "boiler-01";
 char mqtt_server[80];
 char mqtt_port[6] = "1883";
 char mqtt_user[34];
