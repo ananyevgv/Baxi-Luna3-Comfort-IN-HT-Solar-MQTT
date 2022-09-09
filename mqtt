@@ -1,0 +1,264 @@
+mqtt:
+  binary_sensor:
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Ошибка"
+      value_template: '{{ value_json.fault }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "ГВС разрешено"
+      value_template: '{{ value_json.heater_enable }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Компенсация комнатной температуры"
+      value_template: '{{ value_json.house_temp_comp }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false 
+      name: "Компенсация внешней температуры"
+      value_template: '{{ value_json.outside_temp_comp }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Перегрев теплоносителя"
+      value_template: '{{ value_json.water_overtemp }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false 
+      name: "Ошибка по тяге воздуха"
+      value_template: '{{ value_json.air_fault }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Ошибка по газу/огню"
+      value_template: '{{ value_json.gas_fault }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Ошибка низкого давления воды"
+      value_template: '{{ value_json.low_water_pressure }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Горелка включена"
+      value_template: '{{ value_json.flame }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Контур отопления "
+      value_template: '{{ value_json.heating }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Контур ГВС"
+      value_template: '{{ value_json.heating }}'
+    
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Сервис требуется"
+      value_template: '{{ value_json.service_req }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Охлаждение"
+      value_template: '{{ value_json.cooling }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "Удаленный сброс"
+      value_template: '{{ value_json.blor_enabled }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "recirculation"
+      value_template: '{{ value_json.recirculation }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "monitor"
+      value_template: '{{ value_json.monitor }}'
+     
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      payload_on: true
+      payload_off: false
+      name: "diagnostic"
+      value_template:  '{{ value_json.diagnostic }}'
+  sensor: 
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Уставка ГВС"
+      value_template: '{{ value_json.dhw_temp_set }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установка котла"
+      value_template: '{{ value_json.heater_temp_set }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Температура котла"
+      value_template: '{{ value_json.heater_temp }}'
+ 
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Температура ГВС"
+      value_template: '{{ value_json.dhw_temp }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Температура Дома"
+      value_template: '{{ value_json.house_temp }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Температура на улице"
+      value_template: '{{ value_json.outside_temp }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установок контура ГВС max"
+      value_template: '{{ value_json.dhw_max_limit }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установок контура ГВС min"
+      value_template: '{{ value_json.dhw_min_limit }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установок контура  отопления max"
+      value_template: '{{ value_json.heat_max_limit }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установок контура  отопления min"
+      value_template: '{{ value_json.heat_min_limit }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      device_class: temperature
+      unit_of_measurement: "°C"
+      name: "Установка Котла при регуляторах"
+      value_template: '{{ value_json.control_set }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      name: "Интервал обновления "
+      value_template: '{{ value_json.poll_interval }}'
+      unit_of_measurement: "s"
+     
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      name: "Наклон эквитермической кривой"
+      value_template: '{{ value_json.curve_ratio }}'
+      
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      name: "Код ошибки "
+      value_template: '{{ value_json.fault_code }}'
+
+    - state_topic: "opentherm/state"
+      availability:
+       - topic: "opentherm/status"
+      name: "Режим работы регулятора"
+      value_template: '{{ value_json.mode }}'
+#   climate:
+#     modes:
+#       - "off"
+#       - "heat"
+#     name: "Отопление"
+#     current_temperature_topic: "opentherm-thermostat/current-temperature/get"
+#     mode_command_topic: "opentherm-thermostat/mode/set"
+#     mode_state_topic: "opentherm-thermostat/mode/get"
+#     temperature_command_topic: "opentherm-thermostat/setpoint-temperature/set"
+#     temperature_state_topic: "opentherm-thermostat/setpoint-temperature/get"
+#     min_temp: 12
+#     max_temp: 28
+#     value_template: "{{ value }}"
+#     temp_step: 0.5
