@@ -179,7 +179,7 @@ protected:
     StaticJsonDocument<JSON_OBJECT_SIZE(33)> json;
     json["mode"] = vars.mode.value;
     json["heater_temp_set"] = vars.heat_temp_set.value;
-    json["control_set"] = String(vars.control_set.value,1);
+    json["control_set"] = vars.control_set.value;
     json["heater_enable"] = vars.enableCentralHeating.value;
     json["hw_enable"] = vars.enableHotWater.value;
     json["dhw_temp_set"] = vars.dhw_temp_set.value;
