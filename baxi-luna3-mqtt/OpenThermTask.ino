@@ -134,14 +134,14 @@ protected:
   float pid(float sp, float pv, float pv_last, float &ierr, float dt)
   {
     float Kc = 1.0;   // K / %Heater
-    float tauI = 100.0; // sec
+    float tauI = 120.0; // sec
     float tauD = 1.0;  // sec
     // ПИД коэффициенты
     float KP = Kc;
     float KI = Kc / tauI;
     float KD = Kc * tauD;
     // верхняя и нижняя границы уровня нагрева
-    float ophi =  45;
+    float ophi =  60;
     float oplo = 8;
     // вычислить ошибку
     float error = sp - pv;
@@ -547,6 +547,7 @@ protected:
               recirculation = true;
             else 
               recirculation = (op >= vars.heat_temp_set.value);
+            op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)
             break;
