@@ -142,7 +142,7 @@ protected:
     float KD = Kc * tauD;
     // верхняя и нижняя границы уровня нагрева
     float ophi =  45;
-    float oplo = 30;
+    float oplo = 8;
     // вычислить ошибку
     float error = sp - pv;
     // calculate the integral error
