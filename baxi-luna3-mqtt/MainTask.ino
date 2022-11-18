@@ -261,6 +261,9 @@ protected:
     case 2:
       return "Кривые с учетом температуры";
       break;
+    case 3:
+      return "PID, library version";
+      break;      
     default:
       return "";
     }

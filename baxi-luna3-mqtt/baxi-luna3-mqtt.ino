@@ -12,6 +12,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <OpenTherm.h>
 #include <ArduinoJson.h>
+#include <PID_v1.h>
 
 //Входные и выходные контакты OpenTherm, подключены к 4 и 5 контактам платы
 const int inPin = 4;  //D2
@@ -35,7 +36,6 @@ char mqtt_server[80];
 char mqtt_port[6] = "1883";
 char mqtt_user[34];
 char mqtt_password[34];
-
 
 OpenTherm ot(inPin, outPin);
 WiFiClient espClient;

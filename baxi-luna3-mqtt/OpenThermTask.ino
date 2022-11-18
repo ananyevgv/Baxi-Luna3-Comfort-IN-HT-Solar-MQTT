@@ -4,6 +4,13 @@ static unsigned long timeout_count = 0;
 // OT Response
 static  unsigned long ot_response = 0;
 
+// PID controller parameters
+double 
+  PID_SP = 0, 
+  PID_T = 0, 
+  PID_OP = 0;
+PID myPID(&PID_T, &PID_OP, &PID_SP, 2, 0.1, 10, P_ON_M, DIRECT);
+
 class OTHandleTask : public Task {
 
 private:
@@ -12,11 +19,11 @@ private:
   unsigned long send_ts = 0;
   unsigned long send_newts = 0;
   long loop_counter = 0;
-  bool  recirculation = true;
+  bool recirculation = true;
   float
-      pv_last = 0, // предыдущая температура
-      ierr = 0,    // интегральная погрешность
-      dt = 0;      // время между измерениями
+    pv_last = 0, // предыдущая температура
+    ierr = 0,    // интегральная погрешность
+    dt = 0;      // время между измерениями  
 
 public:
   void static IRAM_ATTR handleInterrupt()
@@ -164,14 +171,14 @@ protected:
     ierr = I;
     DEBUG.println("Заданное значение температуры в помещении = " + String(sp) + " °C");
     DEBUG.println("Текущее значение температуры в помещении = " + String(pv) + " °C");
-    DEBUG.println("Выхов ПИД регулятора = " + String(op));
+    DEBUG.println("Выход ПИД регулятора = " + String(op));
     return op;
   }
   //===================================================================================================================
   //       Вычисляем температуру контура отпления, эквитермические кривые
   //===================================================================================================================
   float curve(float sp, float pv)
-  {
+  {    
     float a = (-0.21 * vars.iv_k.value) - 0.06;     // a = -0,21k — 0,06
     float b = (6.04 * vars.iv_k.value) + 1.98;      // b = 6,04k + 1,98
     float c = (-5.06 * vars.iv_k.value) + 18.06;    // с = -5,06k + 18,06
@@ -275,6 +282,11 @@ protected:
   {
     // Setting up
     ot.begin(handleInterrupt, responseCallback);
+
+    //configure PID
+    myPID.SetMode(AUTOMATIC);
+    myPID.SetOutputLimits(6, 45);
+    myPID.SetSampleTime(1000);
   }
 
   void printRequestDetail(OpenThermMessageID id, unsigned long request, unsigned long response)
@@ -539,9 +551,10 @@ protected:
           switch (vars.mode.value)
           {
           case 0:
-            // pid
+            // PID internal version
             op = pid(vars.heat_temp_set.value, vars.house_temp.value, pv_last, ierr, dt);
             pv_last = vars.house_temp.value;
+            
             vars.control_set.value = op;
             if(vars.post_recirculation.value) 
               recirculation = true;
@@ -554,29 +567,48 @@ protected:
           case 1:
             // эквитермические кривые
             op = curve(vars.heat_temp_set.value, vars.house_temp.value);
+            
             vars.control_set.value = op;
             if(vars.post_recirculation.value) 
               recirculation = true;
             else 
               recirculation = (op >= vars.heat_temp_set.value);
+            op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)          
             break;
           case 2:
             // эквитермические кривые с учетом температуры
             op = curve2(vars.heat_temp_set.value, vars.house_temp.value);
+            
             vars.control_set.value = op;
             if(vars.post_recirculation.value) 
               recirculation = true;
             else 
               recirculation = (op >= vars.heat_temp_set.value);
+            op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
+            localRequest = ot.buildSetBoilerTemperatureRequest(op);
+            sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)
+            break;
+          case 3:
+            // PID using PID library
+            PID_SP = vars.heat_temp_set.value;
+            PID_T = vars.house_temp.value;            
+            myPID.Compute();
+            op = PID_OP;
+            
+            vars.control_set.value = op;
+            if(vars.post_recirculation.value) 
+              recirculation = true;
+            else 
+              recirculation = (op >= vars.heat_temp_set.value);
+            op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)
             break;
           default:
             break;
-          }
-          // if(vars.control_set.value < vars.heat_temp_set.value)
+          }          
         }
         else
         {
