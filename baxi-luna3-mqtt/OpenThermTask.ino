@@ -4,13 +4,6 @@ static unsigned long timeout_count = 0;
 // OT Response
 static  unsigned long ot_response = 0;
 
-// PID controller parameters
-double 
-  PID_SP = 0, 
-  PID_T = 0, 
-  PID_OP = 0;
-PID myPID(&PID_T, &PID_OP, &PID_SP, 2, 0.1, 10, P_ON_M, DIRECT);
-
 class OTHandleTask : public Task {
 
 private:
@@ -23,7 +16,10 @@ private:
   float
     pv_last = 0, // предыдущая температура
     ierr = 0,    // интегральная погрешность
-    dt = 0;      // время между измерениями  
+    dt = 0;      // время между измерениями
+  float
+    op_last = 21, // Last op value, default to 21 degrees
+    pv_sp_last = 0; // Difference in PV and SV
 
 public:
   void static IRAM_ATTR handleInterrupt()
@@ -211,7 +207,32 @@ protected:
     op =  constrain(op, 0, 100);
     return op;
   }
-
+  //===================================================================================================================
+  //       Energy balance calculation
+  //===================================================================================================================  
+  float energy_balance(float sp, float pv, float water_temp, float outside_temp, bool heating_active, float op_last, float pv_sp_last, float dt)
+  {
+    // Set point minus real temperature
+    float pv_sp = pv - sp;
+    float heating_energy = heating_active ? water_temp - pv : 0; // Energy is added as a difference between heating water and room temperature
+    float outside_energy = (pv - outside_temp) * -0.06; // Energy exchange with environment
+    float absorbed_energy = (pv_sp - pv_sp_last) > 0 ? (pv_sp - pv_sp_last) * 2500 : 0;
+    float net_energy = round(((heating_energy + outside_energy) * dt / 60) * 10) / 10 - absorbed_energy;
+    c_e = (c_e + net_energy) > 0 ? c_e + net_energy : 0; // Net energy for time period is added to accumulated energy    
+    float house_energy = pv_sp * 2700 + c_e; // House energy is a difference in temperature plus accumulated energy. Shall be zero when we are at a right temperature and no energy is accumulated
+    
+    float op = round((net_energy - house_energy) * 10) / 10; // OP calculation
+    if (op > op_last + 5.0 / 60.0 * dt) {
+      op = op_last + 5.0 / 60.0 * dt; // Max 5 degrees per minute
+    }
+    if (op < op_last - 5.0 / 60.0 * dt) {
+      op = op_last - 5.0 / 60.0 * dt; // Max 5 degrees per minute
+    }
+    // Ограничиваем температуру для ID-1
+    op =  constrain(op, 8, 45);
+    return op;
+  }
+  
   bool getBoilerTemp()
   {
     unsigned long response;
@@ -282,11 +303,6 @@ protected:
   {
     // Setting up
     ot.begin(handleInterrupt, responseCallback);
-
-    //configure PID
-    myPID.SetMode(AUTOMATIC);
-    myPID.SetOutputLimits(6, 45);
-    myPID.SetSampleTime(1000);
   }
 
   void printRequestDetail(OpenThermMessageID id, unsigned long request, unsigned long response)
@@ -590,18 +606,16 @@ protected:
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)
             break;
-          case 3:
-            // PID using PID library
-            PID_SP = vars.heat_temp_set.value;
-            PID_T = vars.house_temp.value;            
-            myPID.Compute();
-            op = PID_OP;
+          case 3:                     
+            op = energy_balance(vars.heat_temp_set.value, vars.house_temp.value, vars.heat_temp.value, vars.outside_temp.value, vars.isHeatingEnabled.value, op_last, pv_sp_last, dt);
+            op_last = op;
+            pv_sp_last = vars.house_temp.value - vars.heat_temp_set.value;
             
             vars.control_set.value = op;
             if(vars.post_recirculation.value) 
               recirculation = true;
             else 
-              recirculation = (op >= vars.heat_temp_set.value);
+              recirculation = (op + 3 >= vars.house_temp.value); // Start circulation if OP is at least 3 degrees above house temperature
             op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)
@@ -619,7 +633,7 @@ protected:
       }
       
       //Рассчитываем потребление энергии
-      vars.kwh_consumed.value = vars.kwh_consumed.value + vars.rel_mod.value * BOILER_RATING * dt / MS2H;
+      vars.kwh_consumed.value += BOILER_RATING * vars.rel_mod.value / 100.0 * dt / S2H;
       
       // Верхняя и нижняя границы для регулировки установки TdhwSet-UB / TdhwSet-LB  (t°C)
       if(loop_counter <= 0) {

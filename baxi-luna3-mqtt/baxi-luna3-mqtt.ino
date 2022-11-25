@@ -12,14 +12,13 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <OpenTherm.h>
 #include <ArduinoJson.h>
-#include <PID_v1.h>
 
 //Входные и выходные контакты OpenTherm, подключены к 4 и 5 контактам платы
 const int inPin = 4;  //D2
 const int outPin = 5; //D1
 
 #define BUILTIN_LED 2     // D4 Встроенный LED
-#define BOILER_RATING 24 // Boiler max power in kW
+#define BOILER_RATING 24.0 // Boiler max power in kW
 
 bool debug = false;
 //flag for saving data
@@ -30,6 +29,10 @@ bool shouldSaveConfig = false;
     Serial
 #define INFO Serial
 #define WARN Serial
+
+// Temporary
+float 
+    c_e = 0; // Accumulated energy
 
 char host[80] = "boiler-01";
 char mqtt_server[80];

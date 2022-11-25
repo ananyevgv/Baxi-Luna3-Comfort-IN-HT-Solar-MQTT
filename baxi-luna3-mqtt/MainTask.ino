@@ -45,6 +45,11 @@ protected:
         vars.house_temp_compsenation.value = json["house_temp_comp"] | true;
         needWrite = true;
       }
+      if (json.containsKey("outside_temp"))
+      {
+        vars.outside_temp.value = json["outside_temp"] | 22.0;
+        needWrite = true;
+      }
       if (json.containsKey("outside_temp_comp"))
       {
         vars.enableOutsideTemperatureCompensation.value = json["outside_temp_comp"] | true;
@@ -176,7 +181,7 @@ protected:
   String static handleOutJson()
   {
     String payload;
-    StaticJsonDocument<JSON_OBJECT_SIZE(33)> json;
+    StaticJsonDocument<JSON_OBJECT_SIZE(36)> json;
     json["mode"] = vars.mode.value;
     json["heater_temp_set"] = vars.heat_temp_set.value;
     json["control_set"] = vars.control_set.value;
@@ -212,6 +217,7 @@ protected:
     json["curve_ratio"] = vars.iv_k.value;
     json["monitor"] = vars.monitor_only.value;
     json["poll_interval"] = vars.MQTT_polling_interval.value;
+    json["accumulated_energy"] = c_e; //Temp
     serializeJson(json, payload);
     return payload;
   }
@@ -262,7 +268,7 @@ protected:
       return "Кривые с учетом температуры";
       break;
     case 3:
-      return "PID, library version";
+      return "Energy accumulator";
       break;      
     default:
       return "";
@@ -279,12 +285,12 @@ protected:
     reply += String("\nТемпература на улице = ") + vars.outside_temp.value;
     reply += String("\nТемпература в доме = ") + vars.house_temp.value;
     reply += String("\nМодуляция горелки = ") + vars.rel_mod.value;
-    reply += String("\nУстановка котла = ") + vars.heat_temp_set.value;
-    reply += String("\nУстановка ГВС = ") + vars.dhw_temp_set.value;
-    reply += String("\nУстановка Котла при регуляторах = ") + vars.control_set.value;
-    reply += String("\nОтопление разрешено  = ") + vars.isHeatingEnabled.value;
-    reply += String("\nГВС разрешено = ") + vars.isDHWenabled.value;
-    reply += String("\nОхлаждение разрешено = ") + vars.isCoolingEnabled.value;
+    reply += String("\nУстановка температуры в доме = ") + vars.heat_temp_set.value;
+    reply += String("\nУстановка температуры ГВС = ") + vars.dhw_temp_set.value;
+    reply += String("\nЗапрошенная температура котла = ") + vars.control_set.value;
+    reply += String("\nОтопление активно  = ") + vars.isHeatingEnabled.value;
+    reply += String("\nГВС активно = ") + vars.isDHWenabled.value;
+    reply += String("\nОхлаждение активно = ") + vars.isCoolingEnabled.value;
     reply += String("\nКонтур отопления вкл  = ") + vars.enableCentralHeating.value;
     reply += String("\nКонтур ГВС вкл = ") + vars.enableHotWater.value;
     reply += String("\nКонтур Охлаждения вкл = ") + vars.enableCooling.value;

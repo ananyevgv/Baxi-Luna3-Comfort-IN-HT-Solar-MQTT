@@ -12,8 +12,8 @@
 #ifndef MQTT_CLEAN_SESSION
 #define MQTT_CLEAN_SESSION 1 // 0 = No clean session, 1 = Clean session (default)
 #endif
-#ifndef MS2H
-#define MS2H 3600000 // Miliseconds to hours
+#ifndef S2H
+#define S2H 3600.0 // Seconds to hours
 #endif
 
 #define INIT_VAR 4
