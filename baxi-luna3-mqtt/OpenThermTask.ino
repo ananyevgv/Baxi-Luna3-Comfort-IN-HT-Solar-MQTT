@@ -551,7 +551,7 @@ protected:
       DEBUG.println("Тип и версия котла: тип " + String(vars.SlaveType.value) + ", версия " + String(vars.SlaveVersion.value));
       
       // Команды чтения данных котла
-      // getOutsideTemp(); Not supported
+      getOutsideTemp(); 
       getBoilerTemp();
       getDHWTemp();
       getFaultCode();
