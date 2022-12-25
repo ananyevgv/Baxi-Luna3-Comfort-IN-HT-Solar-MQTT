@@ -11,6 +11,7 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <OpenTherm.h>
+#include <math.h>
 #include <ArduinoJson.h>
 
 //Входные и выходные контакты OpenTherm, подключены к 4 и 5 контактам платы
@@ -19,6 +20,8 @@ const int outPin = 5; //D1
 
 #define BUILTIN_LED 2     // D4 Встроенный LED
 #define BOILER_RATING 24.0 // Boiler max power in kW
+#define HOUSE_ENERGY 2700.0 // Energy of 1°C of a house
+#define MINUTE_ENERGY_LOSS -0.06 // Loss of energy per minute
 
 bool debug = false;
 //flag for saving data

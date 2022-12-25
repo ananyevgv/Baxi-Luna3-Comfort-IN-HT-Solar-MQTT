@@ -215,20 +215,20 @@ protected:
     // Set point minus real temperature
     float pv_sp = pv - sp;
     float heating_energy = heating_active ? water_temp - pv : 0; // Energy is added as a difference between heating water and room temperature
-    float outside_energy = (pv - outside_temp) * -0.06; // Energy exchange with environment
-    float absorbed_energy = (pv_sp - pv_sp_last) > 0 ? (pv_sp - pv_sp_last) * 2500 : 0;
-    float net_energy = round(((heating_energy + outside_energy) * dt / 60) * 10) / 10 - absorbed_energy;
+    float outside_energy = (pv - outside_temp) * MINUTE_ENERGY_LOSS; // Energy exchange with environment
+    float absorbed_energy = (pv_sp - pv_sp_last) > 0 ? (pv_sp - pv_sp_last) * HOUSE_ENERGY : 0;
+    float net_energy = roundf(((heating_energy + outside_energy) * dt / 60.0 - absorbed_energy) * 10.0) / 10.0;
     c_e = (c_e + net_energy) > 0 ? c_e + net_energy : 0; // Net energy for time period is added to accumulated energy    
-    float house_energy = pv_sp * 2700 + c_e; // House energy is a difference in temperature plus accumulated energy. Shall be zero when we are at a right temperature and no energy is accumulated
+    float house_energy = pv_sp * HOUSE_ENERGY + c_e; // House energy is a difference in temperature plus accumulated energy. Shall be zero when we are at a right temperature and no energy is accumulated
     
-    float op = round((net_energy - house_energy) * 10) / 10; // OP calculation
+    float op = net_energy - house_energy; // OP calculation
     if (op > op_last + 5.0 / 60.0 * dt) {
       op = op_last + 5.0 / 60.0 * dt; // Max 5 degrees per minute
     }
     if (op < op_last - 5.0 / 60.0 * dt) {
       op = op_last - 5.0 / 60.0 * dt; // Max 5 degrees per minute
     }
-    // Ограничиваем температуру для ID-1
+    op = roundf(op * 10.0) / 10.0;
     op =  constrain(op, 8, 45);
     return op;
   }
