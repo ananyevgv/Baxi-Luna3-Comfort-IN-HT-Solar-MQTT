@@ -1,6 +1,7 @@
-#include <LittleFS.h>
-#include <Scheduler.h>
 #include "Variables.h"
+#include <Scheduler.h>
+#include <Task.h>
+#include <LittleFS.h>
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
@@ -11,7 +12,6 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <OpenTherm.h>
-#include <math.h>
 #include <ArduinoJson.h>
 
 //Входные и выходные контакты OpenTherm, подключены к 4 и 5 контактам платы

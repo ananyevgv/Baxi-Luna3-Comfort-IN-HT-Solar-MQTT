@@ -615,7 +615,7 @@ protected:
             if(vars.post_recirculation.value) 
               recirculation = true;
             else 
-              recirculation = (op + 3 >= vars.house_temp.value); // Start circulation if OP is at least 3 degrees above house temperature
+              recirculation = (op >= vars.house_temp.value + 3); // Start circulation if OP is at least 3 degrees above house temperature
             op = constrain(op, vars.MaxCHsetpLow.value, vars.MaxCHsetpUpp.value); // Set only values in the range supported by the boiler;
             localRequest = ot.buildSetBoilerTemperatureRequest(op);
             sendRequest(localRequest, localResponse); // Записываем заданную температуру СО, вычисляемую ПИД регулятором (переменная op)

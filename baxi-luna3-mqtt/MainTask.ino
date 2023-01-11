@@ -14,8 +14,7 @@ void forceARP() {
   }
 }
 
-class MainTaskClass : public Task
-{
+class MainTaskClass : public Task {
 
 protected:
   bool static handleIncomingJson(String payload)
